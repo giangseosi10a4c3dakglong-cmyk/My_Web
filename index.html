@@ -52,6 +52,7 @@ const flags = {
     JPY: "https://flagcdn.com/jp.svg",
     KRW: "https://flagcdn.com/kr.svg"
 };
+    let lastResult = 0; // Biến này để nhớ con số kết quả vừa tính xong
 
 // GET ELEMENTS
 const amountInput = document.getElementById("amount");
@@ -99,6 +100,7 @@ async function convert() {
         // Trích xuất tỷ giá và tính toán
         let rate = data[from][to.toLowerCase()];
         let result = amount * rate;
+        lastResult = result; // Lưu lại con số 316.032 vào bộ nhớ
 
         // Hiển thị kết quả định dạng theo quốc gia
         resultDiv.innerText = formatCurrency(result, to);
@@ -109,14 +111,17 @@ async function convert() {
 }
 // SWAP
 function swap() {
+    // Nếu đã có kết quả cũ, đưa nó lên ô nhập liệu
+    if (lastResult > 0) {
+        // toFixed(2) để lấy 2 chữ số thập phân cho gọn
+        amountInput.value = parseFloat(lastResult.toFixed(2)); 
+    }
     let temp = fromSelect.value;
     fromSelect.value = toSelect.value;
     toSelect.value = temp;
     updateFlags(); // cập nhật quốc kỳ
-    // hoán đổi lại tỉ giá tiền nếu swap đổi giữa 2 đơn vị
-    if (amountInput.value !== "") {
     convert();
-    }
+
 }
 
 // CHART
