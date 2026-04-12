@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Currency Converter Pro</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body>
+
+<div class="card">
+    <h2>💱 Currency Converter</h2>
+
+    <input type="number" id="amount" placeholder="Nhập số tiền...">
+
+    <div class="select-group">
+        <img id="flagFrom" class="flag">
+        <select id="from">
+            <option value="USD">USD</option>
+            <option value="VND">VND</option>
+            <option value="EUR">EUR</option>
+            <option value="JPY">JPY</option>
+            <option value="KRW">KRW</option>
+        </select>
+    </div>
+
+    <div class="select-group">
+        <img id="flagTo" class="flag">
+        <select id="to">
+            <option value="VND">VND</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="JPY">JPY</option>
+            <option value="KRW">KRW</option>
+        </select>
+    </div>
+
+    <button onclick="swap()">🔄 Đổi chiều</button>
+
+    <div class="result" id="result">Kết quả: ...</div>
+
+    <canvas id="chart"></canvas>
+</div>
+
+<script>
+// FLAGS
+const flags = {
+    USD: "https://flagcdn.com/us.svg",
+    VND: "https://flagcdn.com/vn.svg",
+    EUR: "https://flagcdn.com/eu.svg",
+    JPY: "https://flagcdn.com/jp.svg",
+    KRW: "https://flagcdn.com/kr.svg"
+};
+
+// GET ELEMENTS
+const amountInput = document.getElementById("amount");
+const fromSelect = document.getElementById("from");
+const toSelect = document.getElementById("to");
+const resultDiv = document.getElementById("result");
+const flagFrom = document.getElementById("flagFrom");
+const flagTo = document.getElementById("flagTo");
+
+// UPDATE FLAGS
+function updateFlags() {
+    flagFrom.src = flags[fromSelect.value];
+    flagTo.src = flags[toSelect.value];
+}
+
+// FORMAT MONEY
+function formatCurrency(value, currency) {
+    const localeMap = {
+        USD: "en-US",
+        EUR: "de-DE",
+        VND: "vi-VN",
+        JPY: "ja-JP",
+        KRW: "ko-KR"
+    };
+
+    return value.toLocaleString(localeMap[currency], {
+        style: "currency",
+        currency: currency
+    });
+}
+
+// CONVERT
+async function convert() {
+    try {
+        let amount = amountInput.value;
+        let from = fromSelect.value.toLowerCase();
+        let to = toSelect.value.toUpperCase();
+
+        if (!amount) return;
+
+        // Gọi API lấy dữ liệu tỷ giá real-time
+        let res = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${from}.json`);
+        let data = await res.json();
+
+        // Trích xuất tỷ giá và tính toán
+        let rate = data[from][to.toLowerCase()];
+        let result = amount * rate;
+
+        // Hiển thị kết quả định dạng theo quốc gia
+        resultDiv.innerText = formatCurrency(result, to);
+        drawChart(rate);
+    } catch (err) {
+        resultDiv.innerText = "Lỗi kết nối API!";
+    }
+}
+// SWAP
+function swap() {
+    let temp = fromSelect.value;
+    fromSelect.value = toSelect.value;
+    toSelect.value = temp;
+    updateFlags();
+    convert();
+}
+
+// CHART
+let chart;
+function drawChart(rate) {
+    let ctx = document.getElementById("chart");
+
+    let data = [rate*0.95, rate*0.98, rate, rate*1.02, rate*1.05];
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ["-2d","-1d","Now","+1d","+2d"],
+            datasets: [{
+                data: data
+            }]
+        }
+    });
+}
+
+// EVENTS
+amountInput.addEventListener("input", convert);
+
+fromSelect.addEventListener("change", () => {
+    updateFlags();
+    convert();
+});
+
+toSelect.addEventListener("change", () => {
+    updateFlags();
+    convert();
+});
+
+// INIT
+updateFlags();
+</script>
+
+</body>
+</html>
