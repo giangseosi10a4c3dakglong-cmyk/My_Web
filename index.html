@@ -112,8 +112,11 @@ function swap() {
     let temp = fromSelect.value;
     fromSelect.value = toSelect.value;
     toSelect.value = temp;
-    updateFlags();
+    updateFlags(); // cập nhật quốc kỳ
+    // hoán đổi lại tỉ giá tiền nếu swap đổi giữa 2 đơn vị
+    if (amountInput.value !== "") {
     convert();
+    }
 }
 
 // CHART
